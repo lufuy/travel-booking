@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NR Travels - Booking</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    .bullet {
+      display: block;
+      margin-top: 5px;
+    }
+    header {
+      background-position: center top -5.5in;
+    }
+    .delete-button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: #fee2e2;
+      color: #dc2626;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 1.25rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+    .delete-button:hover {
+      background-color: #fecaca;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <header class="bg-cover bg-center h-48 text-white flex items-center justify-center" style="background-image: url('https://ayyappatoursandtravels.com/assets/images/slider/1.jpg');">
+    <h1 class="text-3xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded">NR Travels - Booking</h1>
+  </header>
+
+  <main class="p-4 max-w-4xl mx-auto">
+    <section id="itinerarySection">
+      <h2 class="text-xl font-bold mb-4">🗓️ Trip Itinerary</h2>
+      <div id="dateContainer"></div>
+      <button onclick="addDate()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">+ Add Another Day</button>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-xl font-bold mb-4">🚗 Choose Your Car</h2>
+      <div class="flex gap-4">
+        <label class="block w-1/2 cursor-pointer">
+          <input type="radio" name="car" value="Innova" class="mt-2" checked> Innova
+        </label>
+        <label class="block w-1/2 cursor-pointer">
+          <input type="radio" name="car" value="Tempo Traveller" class="mt-2"> Tempo Traveller
+        </label>
+      </div>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-xl font-bold mb-4">🙋 Customer Info</h2>
+      <form id="tripForm">
+        <input type="text" id="cust_name" placeholder="Your Name" required class="block w-full p-2 mb-2 border rounded">
+        <input type="number" id="members" placeholder="Number of Members" required class="block w-full p-2 mb-2 border rounded">
+        <button type="button" onclick="submitTrip()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Submit & Share</button>
+        <p id="successMessage" class="mt-4 text-green-600 font-semibold hidden">✅ PDF downloaded successfully! Check your Downloads folder.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="bg-gray-800 text-white text-center py-4 mt-8">
+    <p>&copy; 2025 NR Travels | Contact: nrtourstravelsbalaji@gmail.com</p>
+  </footer>
+
+  <script>
+    let dateCount = 0;
+
+    function addDate() {
+      dateCount++;
+      const block = document.createElement("div");
+      block.className = "bg-white p-4 mb-4 rounded shadow relative";
+      block.setAttribute("id", `day${dateCount}`);
+      block.innerHTML =
+        `<h3 class='text-lg font-semibold mb-2'>🗓️ Day ${dateCount}</h3>
+        <label>Choose Date: <input type='date' class='block mb-2 w-full border p-2 rounded' /></label>
+        <textarea class='w-full border p-2 rounded itineraryBox' rows='4' placeholder='Enter activities...'></textarea>`;
+
+      document.getElementById("dateContainer").appendChild(block);
+    }
+
+    function submitTrip() {
+      const name = document.getElementById("cust_name").value;
+      const members = document.getElementById("members").value;
+      const car = document.querySelector("input[name='car']:checked").value;
+      const itineraryBoxes = document.querySelectorAll(".itineraryBox");
+      const dates = document.querySelectorAll("input[type='date']");
+
+      if (!name || !members || itineraryBoxes.length === 0) {
+        alert("Please fill in all fields before submitting.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+
+      doc.setFontSize(22);
+      doc.setTextColor(0, 0, 255);
+      doc.setFont("helvetica", "bold");
+      doc.text("TRIP BOOKING", 10, y);
+      y += 12;
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Name: ${name}`, 10, y); y += 8;
+      doc.text(`Members: ${members}`, 10, y); y += 8;
+      doc.text(`Car: ${car}`, 10, y); y += 12;
+
+      for (let i = 0; i < itineraryBoxes.length; i++) {
+        const day = "Day " + (i + 1);
+        const date = dates[i].value;
+        const lines = itineraryBoxes[i].value.trim().split(/\n/).filter(l => l.trim());
+
+        doc.setFillColor(255, 230, 240);
+        doc.rect(10, y - 6, 190, 12, 'F');
+
+        doc.setFontSize(16);
+        doc.setTextColor(255, 0, 0);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${day} (${date})`, 12, y);
+        y += 10;
+
+        doc.setFontSize(13);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+
+        for (const line of lines) {
+          if (y > 280) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(`• ${line}`, 12, y);
+          y += 7;
+        }
+
+        y += 3;
+        doc.setDrawColor(0);
+        doc.line(10, y, 200, y);
+        y += 9;
+      }
+
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text("This itinerary is generated for informational purposes only by NR Travels.", 10, y);
+
+      const safeName = name.replace(/\s+/g, "_");
+      doc.save(`NR-Travels-Itinerary-${safeName}.pdf`);
+
+      document.getElementById("successMessage").classList.remove("hidden");
+
+      let message = `TRIP BOOKING\nName: ${name}\nMembers: ${members}\nCar: ${car}`;
+      for (let i = 0; i < itineraryBoxes.length; i++) {
+        const day = "Day " + (i + 1);
+        const date = dates[i].value;
+        const lines = itineraryBoxes[i].value.trim().split(/\n/).filter(l => l.trim());
+        const formatted = lines.map(line => `• ${line}`).join("\n");
+        message += `\n\n${day} (${date}):\n${formatted}\n------------------------`;
+      }
+
+      const encoded = encodeURIComponent(message);
+      const whatsappURL = `https://wa.me/919444353834?text=${encoded}`;
+      window.open(whatsappURL, "_blank");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      addDate();
+    });
+  </script>
+</body>
+</html>
